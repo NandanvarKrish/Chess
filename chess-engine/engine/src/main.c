@@ -70,7 +70,7 @@ void print_board(const Board *board) {
     printf("\n  +---+---+---+---+---+---+---+---+\n");
 
     for (int rank = 0; rank < 8; rank++) {
-        printf("%d |", 8-rank);
+        printf("%d |", 8 - rank);
 
         for (int file = 0; file < 8; file++)
         {
