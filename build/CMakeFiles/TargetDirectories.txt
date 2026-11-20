@@ -1,0 +1,2 @@
+/Users/krishnandanvar/Documents/Chess/build/CMakeFiles/edit_cache.dir
+/Users/krishnandanvar/Documents/Chess/build/CMakeFiles/rebuild_cache.dir
