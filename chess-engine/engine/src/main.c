@@ -94,7 +94,7 @@ void print_board(const Board *board) {
                 case B_KING:   symbol = 'k'; break;
                 default:       symbol = ' '; break; // EMPTY
             }
-            printf("%c |", symbol);
+            printf(" %c |", symbol);
         }
         printf("\n  +---+---+---+---+---+---+---+---+\n");
     }

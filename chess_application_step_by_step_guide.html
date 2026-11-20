@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="A practical step-by-step guide to building a desktop chess application using a custom C chess engine, Python, and Pygame.">
+<title>Build Your Own Chess — C Engine + Python + Pygame</title>
+<style>
+:root{
+  --bg:#f5f3ef;--panel:#fff;--ink:#20231f;--muted:#68716a;--line:#e5e2db;
+  --green:#365b46;--green2:#e8f0e9;--gold:#c28a39;--code:#1d2522;--codeink:#e9f0e9;
+  --shadow:0 10px 30px rgba(30,38,32,.06);--radius:18px
+}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+a{color:var(--green)}button{font:inherit;cursor:pointer}
+.hero{background:#24392e;color:#f7f6f1;padding:64px 22px 54px}
+.hero-inner,.layout{max-width:1160px;margin:auto}
+.eyebrow{text-transform:uppercase;letter-spacing:.16em;font-size:.76rem;color:#c5d4c8;font-weight:700}
+h1{font-size:clamp(2.4rem,6vw,4.8rem);line-height:1.05;letter-spacing:-.055em;max-width:850px;margin:18px 0}
+.hero p{max-width:740px;color:#d4ded6;font-size:1.12rem}
+.pills{display:flex;flex-wrap:wrap;gap:9px;margin-top:24px}
+.pill{border:1px solid #617769;border-radius:99px;padding:6px 12px;font-size:.84rem;color:#e5eee7}
+.layout{display:grid;grid-template-columns:260px minmax(0,1fr);gap:28px;padding:34px 22px 80px}
+.sidebar{position:sticky;top:18px;align-self:start;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}
+.sidebar h3{margin:0 0 12px;font-size:.95rem}
+.sidebar a{display:block;text-decoration:none;padding:7px 9px;border-radius:8px;color:#505a52;font-size:.9rem}
+.sidebar a:hover{background:var(--green2);color:var(--green)}
+.progress-wrap{margin-top:20px;padding-top:16px;border-top:1px solid var(--line)}
+.progress-head{display:flex;justify-content:space-between;font-size:.83rem;font-weight:700}
+.track{height:8px;background:#ecebe6;border-radius:20px;overflow:hidden;margin:9px 0}
+.bar{height:100%;width:0;background:var(--green);transition:width .2s}
+main{min-width:0}
+section{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:28px;margin-bottom:20px;box-shadow:var(--shadow);scroll-margin-top:20px}
+h2{font-size:1.65rem;letter-spacing:-.03em;line-height:1.2;margin:0 0 14px}
+h3{font-size:1.08rem;margin:22px 0 8px}
+p{margin:8px 0 14px}.muted,.small{color:var(--muted)}.small{font-size:.88rem}
+.callout{border-left:4px solid var(--gold);background:#fbf5e9;padding:13px 16px;border-radius:0 10px 10px 0;margin:16px 0}
+.success{border-left-color:var(--green);background:var(--green2)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.tile{background:#faf9f6;border:1px solid var(--line);border-radius:13px;padding:15px}
+.tile strong{display:block;margin-bottom:4px}
+code{font-family:"SFMono-Regular",Consolas,monospace;font-size:.9em;background:#f0efeb;padding:2px 5px;border-radius:5px}
+pre{background:var(--code);color:var(--codeink);padding:17px 18px;border-radius:12px;overflow:auto;font:13px/1.65 "SFMono-Regular",Consolas,monospace;position:relative}
+pre code{background:none;padding:0;color:inherit}
+.copy{position:absolute;right:10px;top:9px;border:1px solid #52615a;background:#303c36;color:#f4f6f2;border-radius:7px;padding:4px 9px;font-size:.75rem}
+.step{display:grid;grid-template-columns:34px 1fr;gap:12px;margin:18px 0}
+.num{width:32px;height:32px;border-radius:50%;background:var(--green2);color:var(--green);display:grid;place-items:center;font-weight:800}
+.checklist{list-style:none;padding:0;margin:10px 0}
+.checklist li{padding:7px 0;border-bottom:1px solid #f0eee9}
+.checklist label{display:flex;gap:10px;align-items:flex-start;cursor:pointer}
+input[type=checkbox]{accent-color:var(--green);margin-top:6px;width:16px;height:16px;flex:none}
+table{width:100%;border-collapse:collapse;font-size:.92rem}
+th,td{text-align:left;padding:10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:#59635b;font-size:.8rem;text-transform:uppercase;letter-spacing:.05em}
+.arch{display:grid;gap:9px;max-width:700px;margin:18px auto;text-align:center}
+.arch div{padding:14px;border:1px solid var(--line);border-radius:12px;background:#faf9f6}
+.arch .core{background:#e8f0e9;border-color:#c9d9cc}
+.arch .arrow{border:0;background:transparent;padding:0;color:var(--muted)}
+details{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:10px 0}
+summary{font-weight:700;cursor:pointer}
+footer{text-align:center;color:var(--muted);padding:0 20px 40px;font-size:.85rem}
+@media(max-width:850px){.layout{grid-template-columns:1fr}.sidebar{position:static}.sidebar nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2px}.grid{grid-template-columns:1fr}}
+@media(max-width:520px){.hero{padding:44px 18px}.layout{padding:20px 12px 50px}section{padding:21px}.sidebar nav{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="hero">
+ <div class="hero-inner">
+  <div class="eyebrow">The practical build guide</div>
+  <h1>Build your own chess application.</h1>
+  <p>A step-by-step engineering plan for a complete desktop chess app: a custom chess engine written in C, a Python + Pygame interface, and the tools to test, optimize, and ship it.</p>
+  <div class="pills"><span class="pill">C11 / C17 engine</span><span class="pill">Python + Pygame</span><span class="pill">Apple Silicon Mac</span><span class="pill">75 modules · 12 phases</span></div>
+ </div>
+</header>
+<div class="layout">
+ <aside class="sidebar">
+  <h3>On this page</h3>
+  <nav>
+   <a href="#overview">1. Project overview</a><a href="#architecture">2. Architecture</a>
+   <a href="#setup">3. Environment setup</a><a href="#structure">4. Folder structure</a>
+   <a href="#foundation">5. C foundation</a><a href="#board">6. Board + FEN</a>
+   <a href="#rules">7. Legal chess rules</a><a href="#validation">8. Validate engine</a>
+   <a href="#gui">9. Build the GUI</a><a href="#bridge">10. Connect C + Python</a>
+   <a href="#ai">11. Build the AI</a><a href="#advanced">12. Strengthen engine</a>
+   <a href="#features">13. Product features</a><a href="#release">14. Test + release</a>
+   <a href="#roadmap">15. 75-module roadmap</a><a href="#resources">16. Resources</a>
+  </nav>
+  <div class="progress-wrap">
+   <div class="progress-head"><span>Your checklist</span><span id="count">0 / 25</span></div>
+   <div class="track"><div class="bar" id="bar"></div></div>
+   <p class="small">Tick items as you complete them. Progress is kept in this page while it remains open; it is not synced to an account.</p>
+  </div>
+ </aside>
+ <main>
+  <section id="overview">
+   <h2>1. What are you building?</h2>
+   <p>The target is a native desktop chess application that supports local two-player games, human-vs-computer games, legal chess rules, time controls, saved games, and analysis. The chess-playing logic must be your own C implementation—not a wrapper around Stockfish.</p>
+   <div class="grid">
+    <div class="tile"><strong>Application</strong>Menus, board, interaction, clocks, history, themes, replay and statistics.</div>
+    <div class="tile"><strong>Chess engine</strong>Position representation, legal move generation, evaluation, search and best-move output.</div>
+    <div class="tile"><strong>Integration</strong>A well-defined interface between Python and the C engine.</div>
+    <div class="tile"><strong>Quality</strong>Perft, unit tests, regression tests, profiling, packaging and documentation.</div>
+   </div>
+   <div class="callout"><strong>Core principle:</strong> correctness before strength, and strength before optimization. A fast engine that generates illegal moves is not a good engine.</div>
+  </section>
+
+  <section id="architecture">
+   <h2>2. Recommended architecture</h2>
+   <p>Keep the application and engine separate. Python owns the user experience; C owns chess position state and chess rules. Both the Python bridge and UCI executable should use the same C engine core.</p>
+   <div class="arch">
+    <div><strong>Python application + Pygame</strong><br><span class="small">Rendering · input · menus · clock · history · settings</span></div>
+    <div class="arrow">↕</div>
+    <div><strong>Communication boundary</strong><br><span class="small">ctypes shared-library API for board operations · UCI subprocess for search</span></div>
+    <div class="arrow">↕</div>
+    <div class="core"><strong>Custom C chess engine</strong><br><span class="small">Board · move generation · legal rules · make/unmake · evaluation · search</span></div>
+    <div><strong>Supporting tools</strong><br><span class="small">CMake · Clang · CTest · pytest · LLDB · Git · SQLite</span></div>
+   </div>
+   <h3>Why two communication methods?</h3>
+   <ul>
+    <li><strong><code>ctypes</code>:</strong> lets Python call a small, stable C API for loading positions, listing legal moves, applying moves and reading game state.</li>
+    <li><strong>UCI:</strong> a standard text protocol for longer-running engine searches, time limits, depth, best moves, evaluation and principal variations.</li>
+   </ul>
+   <div class="callout success">Do not write two engines. The shared library and UCI executable must link to the same C source modules and rules implementation.</div>
+  </section>
+
+  <section id="setup">
+   <h2>3. Set up your Mac development environment</h2>
+   <p>Use native Apple Silicon tools. You do not need a cloud server or paid API for this project.</p>
+   <div class="step"><div class="num">1</div><div><strong>Install command-line tools</strong><pre><button class="copy">Copy</button><code>xcode-select --install
+brew install cmake git python</code></pre><p class="small">If you do not have Homebrew, install it from its official website first.</p></div></div>
+   <div class="step"><div class="num">2</div><div><strong>Create the project and Python environment</strong><pre><button class="copy">Copy</button><code>mkdir chess-engine
+cd chess-engine
+git init
+
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+pip install pygame-ce numpy pandas matplotlib pytest</code></pre></div></div>
+   <div class="step"><div class="num">3</div><div><strong>Check the tools</strong><pre><button class="copy">Copy</button><code>clang --version
+cmake --version
+python --version
+git --version
+python -c "import pygame; print(pygame.version.ver)"</code></pre></div></div>
+   <ul class="checklist">
+    <li><label><input type="checkbox"> Xcode Command Line Tools and Clang installed</label></li>
+    <li><label><input type="checkbox"> CMake, Git and Python installed</label></li>
+    <li><label><input type="checkbox"> Virtual environment created and activated</label></li>
+    <li><label><input type="checkbox"> Pygame and pytest import successfully</label></li>
+   </ul>
+  </section>
+
+  <section id="structure">
+   <h2>4. Create a maintainable folder structure</h2>
+   <p>Start with a structure that separates the C engine, Python application, assets, tests and documentation. You can add files as each module is reached; do not create dozens of empty files just for appearance.</p>
+   <pre><button class="copy">Copy</button><code>chess-engine/
+├── engine/
+│   ├── include/
+│   ├── src/
+│   ├── tests/
+│   └── CMakeLists.txt
+├── application/
+│   ├── core/
+│   ├── ui/
+│   ├── analysis/
+│   └── storage/
+├── assets/
+│   ├── pieces/
+│   ├── fonts/
+│   └── sounds/
+├── data/
+│   ├── games/
+│   └── openings/
+├── benchmarks/
+├── docs/
+├── scripts/
+├── requirements.txt
+├── README.md
+└── .gitignore</code></pre>
+   <p><strong>Keep generated files out of Git:</strong> build directories, Python virtual environments, cache files, local databases containing personal data and compiled binaries should normally be ignored.</p>
+  </section>
+
+  <section id="foundation">
+   <h2>5. Build the C foundation before chess logic</h2>
+   <p>Do not begin with a giant <code>main.c</code>. Create a tiny executable, learn the build cycle, then split the engine into modules.</p>
+   <h3>First CMake project</h3>
+   <p>Create <code>engine/src/main.c</code>:</p>
+   <pre><button class="copy">Copy</button><code>#include &lt;stdio.h&gt;
+
+int main(void) {
+    puts("Chess engine foundation is running.");
+    return 0;
+}</code></pre>
+   <p>Create <code>engine/CMakeLists.txt</code>:</p>
+   <pre><button class="copy">Copy</button><code>cmake_minimum_required(VERSION 3.20)
+project(chess_engine C)
+
+set(CMAKE_C_STANDARD 17)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_C_EXTENSIONS OFF)
+
+add_executable(chess_engine src/main.c)
+
+if(CMAKE_C_COMPILER_ID MATCHES "Clang|GNU")
+    target_compile_options(chess_engine PRIVATE
+        -Wall -Wextra -Wpedantic
+    )
+endif()</code></pre>
+   <p>Build and run:</p>
+   <pre><button class="copy">Copy</button><code>cmake -S engine -B build
+cmake --build build
+./build/chess_engine</code></pre>
+   <h3>Learn these C topics as you go</h3>
+   <ul><li>Headers, source files, declarations and definitions.</li><li>Structs, enums, pointers, arrays and integer types.</li><li>Stack versus heap, allocation and ownership.</li><li>Const correctness, error handling and API boundaries.</li><li>Compiler warnings, debugger use and sanitizers.</li></ul>
+   <div class="callout">Use explicit board/state parameters in engine functions. Avoid global mutable board state; it makes testing, multiple games and search harder.</div>
+   <ul class="checklist">
+    <li><label><input type="checkbox"> M01 — Repository and project directories created</label></li>
+    <li><label><input type="checkbox"> M02 — CMake builds and runs the starter program</label></li>
+    <li><label><input type="checkbox"> M03 — Engine modules and interfaces documented</label></li>
+    <li><label><input type="checkbox"> M04 — LLDB and sanitizers tested on a small program</label></li>
+    <li><label><input type="checkbox"> M05 — CTest runs at least one passing test</label></li>
+   </ul>
+  </section>
+
+  <section id="board">
+   <h2>6. Represent the chessboard and parse FEN</h2>
+   <p>Implement a simple, easy-to-debug board representation first. A 64-square array or 0x88 mailbox is suitable for the initial rules engine. After it is correct, add a bitboard representation and compare both implementations.</p>
+   <h3>Conceptual board state</h3>
+   <pre><code>typedef struct {
+    int squares[64];
+    int side_to_move;
+    int castling_rights;
+    int en_passant_square;
+    int halfmove_clock;
+    int fullmove_number;
+} Board;</code></pre>
+   <p>This is an illustrative starter structure, not the final optimized representation. Choose a consistent piece encoding and document square indexing.</p>
+   <h3>Implement in this order</h3>
+   <ol><li>Map algebraic squares (<code>a1</code> through <code>h8</code>) to array indices and back.</li><li>Initialize the standard starting position.</li><li>Print the board in a readable terminal format.</li><li>Store side to move, castling rights, en-passant square and move counters.</li><li>Parse FEN into a position, rejecting malformed input.</li><li>Serialize the board back to FEN and test round trips.</li></ol>
+   <div class="callout success">A good test: load the starting FEN, serialize it, parse the result again, and verify every field matches.</div>
+  </section>
+
+  <section id="rules">
+   <h2>7. Implement all legal chess rules</h2>
+   <p>Generate pseudo-legal moves, then filter out moves that leave your own king in check. Keep move generation, attack detection and make/unmake responsibilities clearly separated.</p>
+   <table><thead><tr><th>Order</th><th>Work</th><th>Important cases</th></tr></thead><tbody>
+    <tr><td>1</td><td>Move representation</td><td>From, to, promotion and special-move flags</td></tr>
+    <tr><td>2</td><td>Pawn moves</td><td>Single/double push, capture, promotion, en passant</td></tr>
+    <tr><td>3</td><td>Knight moves</td><td>Board edges and occupied destinations</td></tr>
+    <tr><td>4</td><td>Bishop, rook, queen</td><td>Sliding rays, blockers and captures</td></tr>
+    <tr><td>5</td><td>King and attacks</td><td>Check, attacked squares and king adjacency</td></tr>
+    <tr><td>6</td><td>Castling</td><td>Rights, rook presence, empty path and attacked transit squares</td></tr>
+    <tr><td>7</td><td>Legal move filtering</td><td>Pins and moves that expose the king</td></tr>
+    <tr><td>8</td><td>Make/unmake</td><td>Restore every changed field exactly</td></tr>
+    <tr><td>9</td><td>Game status</td><td>Checkmate, stalemate and draw conditions</td></tr>
+   </tbody></table>
+   <h3>Design make/unmake carefully</h3>
+   <p>Before applying a move, save the captured piece, castling rights, en-passant square, halfmove/fullmove counters and hash key in an undo record. Unmaking must restore the exact prior position—not merely move the pieces back.</p>
+   <p>Implement repetition tracking and draw claims correctly. Distinguish automatic draws from claimable draws; include the 50-move/75-move rules and repetition rules required by the ruleset you adopt.</p>
+  </section>
+
+  <section id="validation">
+   <h2>8. Prove the rules engine is correct</h2>
+   <p>Perft recursively counts the legal positions reachable in a given number of plies. It is one of the most useful tools for finding move-generation bugs.</p>
+   <table><thead><tr><th>Starting position perft depth</th><th>Expected nodes</th></tr></thead><tbody>
+    <tr><td>1</td><td>20</td></tr><tr><td>2</td><td>400</td></tr><tr><td>3</td><td>8,902</td></tr><tr><td>4</td><td>197,281</td></tr><tr><td>5</td><td>4,865,609</td></tr>
+   </tbody></table>
+   <p>When a count differs, implement divide output: show the node count for each legal root move. This narrows down the branch containing the bug.</p>
+   <ul class="checklist">
+    <li><label><input type="checkbox"> Starting-position perft matches through depth 4</label></li>
+    <li><label><input type="checkbox"> Castling edge cases tested</label></li>
+    <li><label><input type="checkbox"> En-passant edge cases tested, including discovered check</label></li>
+    <li><label><input type="checkbox"> Promotions to queen, rook, bishop and knight tested</label></li>
+    <li><label><input type="checkbox"> Pins, checks, checkmate and stalemate tested</label></li>
+    <li><label><input type="checkbox"> Make/unmake restores the complete position</label></li>
+    <li><label><input type="checkbox"> Regression tests added for every fixed bug</label></li>
+   </ul>
+   <div class="callout">Do not start serious search-engine work until legal move generation and perft are trustworthy.</div>
+  </section>
+
+  <section id="gui">
+   <h2>9. Build the Pygame desktop interface</h2>
+   <p>Build the interface against a temporary Python test controller first. This lets you work on rendering and interaction before the C engine is ready. Replace the temporary controller with the C bridge later.</p>
+   <ol><li>Initialize a Pygame window, event loop and frame clock.</li><li>Draw an 8×8 board with correct light/dark square orientation.</li><li>Load piece artwork and scale it cleanly for each square.</li><li>Map mouse coordinates to board squares.</li><li>Support selection, legal-destination highlights and move input.</li><li>Add captured pieces, move list, last-move highlight and check indicator.</li><li>Add undo, redo, restart, board flip and promotion choice.</li><li>Add menus, settings, themes, sound and accessibility options.</li></ol>
+   <h3>Suggested Python modules</h3>
+   <pre><code>application/
+├── main.py
+├── core/
+│   ├── game_controller.py
+│   ├── engine_bridge.py
+│   ├── board_state.py
+│   └── clock.py
+├── ui/
+│   ├── board.py
+│   ├── renderer.py
+│   ├── input_handler.py
+│   ├── game_screen.py
+│   └── themes.py
+└── storage/
+    ├── pgn_manager.py
+    ├── fen_manager.py
+    └── settings_manager.py</code></pre>
+   <p>Keep rendering separate from game rules. The UI should ask the engine for legal moves rather than deciding legality itself.</p>
+  </section>
+
+  <section id="bridge">
+   <h2>10. Connect Python to the C engine</h2>
+   <h3>Part A — Shared library API</h3>
+   <p>Expose a small C interface with opaque or carefully documented handles. Start with functions to create/destroy a game state, load FEN, get legal moves, apply a move, query status and export FEN. Define ownership and buffer sizes explicitly.</p>
+   <p>Compile a shared library for macOS (typically a <code>.dylib</code>) using CMake. In Python, load it with <code>ctypes.CDLL</code> and declare <code>argtypes</code> and <code>restype</code> for every function. Never assume C and Python structure layouts match unless you deliberately define and test the ABI.</p>
+   <h3>Part B — UCI engine process</h3>
+   <p>Run the standalone C engine as a subprocess for searches. Implement the essential commands:</p>
+   <pre><code>uci
+isready
+ucinewgame
+position startpos
+position fen &lt;FEN&gt;
+go depth 8
+stop
+quit</code></pre>
+   <p>The engine should answer with protocol messages such as <code>uciok</code>, <code>readyok</code>, <code>info</code> and <code>bestmove</code>. Parse output without freezing the Pygame event loop. Use a worker thread or asynchronous process reader for search.</p>
+   <div class="callout success">One C engine core, two front doors: a shared-library API for direct game operations and UCI for search. Keep the rules and search implementation in C.</div>
+  </section>
+
+  <section id="ai">
+   <h2>11. Build the first playable AI</h2>
+   <p>Start with a basic but correct search, then add strength improvements incrementally. Use a fixed test suite so you can tell whether a change actually helps.</p>
+   <ol><li><strong>Evaluation:</strong> material values and a score from the side-to-move perspective.</li><li><strong>Minimax:</strong> understand the game tree and maximizing/minimizing turns.</li><li><strong>Negamax:</strong> simplify the zero-sum search implementation.</li><li><strong>Alpha-beta:</strong> prune branches that cannot improve the current result.</li><li><strong>Iterative deepening:</strong> search depth 1, then 2, then 3, retaining the last completed result.</li><li><strong>Time management:</strong> stop safely when the allotted time is reached.</li></ol>
+   <p>Report depth, node count, elapsed time, nodes per second, score and principal variation. The UI should remain responsive while the engine thinks.</p>
+   <h3>Search safety</h3>
+   <ul><li>Always have a legal fallback move when a search is interrupted before completing a deeper iteration.</li><li>Handle checkmate scores consistently, including distance-to-mate preferences.</li><li>Test terminal positions and zero-legal-move positions.</li><li>Make sure cancellation and process shutdown do not corrupt state.</li></ul>
+  </section>
+
+  <section id="advanced">
+   <h2>12. Improve engine strength and speed</h2>
+   <p>Add one feature at a time, measure it, and retain it only when correctness and performance tests remain sound.</p>
+   <table><thead><tr><th>Feature</th><th>What it contributes</th></tr></thead><tbody>
+    <tr><td>Piece-square tables</td><td>Rewards useful piece placement.</td></tr>
+    <tr><td>Pawn structure</td><td>Recognizes doubled, isolated and passed pawns.</td></tr>
+    <tr><td>Mobility</td><td>Measures available piece activity.</td></tr>
+    <tr><td>King safety</td><td>Estimates exposure and defensive cover.</td></tr>
+    <tr><td>Move ordering</td><td>Finds promising moves earlier, improving pruning.</td></tr>
+    <tr><td>Quiescence search</td><td>Reduces unstable evaluations at tactical leaf positions.</td></tr>
+    <tr><td>Killer/history heuristics</td><td>Improves ordering using prior search information.</td></tr>
+    <tr><td>Zobrist hashing + transposition table</td><td>Identifies repeated positions and reuses search results.</td></tr>
+    <tr><td>Principal variation search</td><td>Uses narrow windows after the first candidate move.</td></tr>
+    <tr><td>Bitboards / magic bitboards</td><td>Can accelerate attack and sliding-piece calculations.</td></tr>
+   </tbody></table>
+   <p>Move from a simple array/mailbox representation to bitboards only when you can validate both against the same test positions and perft results. Optimization is a measured engineering task, not a visual rewrite.</p>
+  </section>
+
+  <section id="features">
+   <h2>13. Turn the engine into a complete chess product</h2>
+   <div class="grid">
+    <div class="tile"><strong>Game modes</strong>Local two-player, human vs AI, difficulty and side selection.</div>
+    <div class="tile"><strong>Time controls</strong>Bullet, blitz, rapid, classical and custom clocks.</div>
+    <div class="tile"><strong>Game records</strong>PGN import/export, FEN editor, save/load and replay.</div>
+    <div class="tile"><strong>Opening support</strong>Opening names and an optional opening book.</div>
+    <div class="tile"><strong>Analysis</strong>Evaluation bar, best line, alternate lines and move review.</div>
+    <div class="tile"><strong>Personalization</strong>Themes, board orientation, sounds and settings.</div>
+    <div class="tile"><strong>Statistics</strong>Win/loss/draw records, opening stats and performance graphs.</div>
+    <div class="tile"><strong>Persistence</strong>SQLite for games and settings; JSON for portable configuration where useful.</div>
+   </div>
+   <p>Use Pandas and Matplotlib for offline analysis and charts, not for the engine's move generation or search hot path.</p>
+  </section>
+
+  <section id="release">
+   <h2>14. Test, profile and release</h2>
+   <h3>Testing layers</h3>
+   <ol><li><strong>C unit tests:</strong> board, FEN, attacks, moves, make/unmake, evaluation and search.</li><li><strong>Perft tests:</strong> known positions and expected node counts.</li><li><strong>Python tests:</strong> controllers, clocks, PGN handling and settings.</li><li><strong>Integration tests:</strong> shared library, UCI protocol, process interruption and synchronization.</li><li><strong>Strength/performance tests:</strong> tactical positions, self-play, nodes per second, memory and time controls.</li></ol>
+   <h3>Debug build with sanitizers</h3>
+   <pre><button class="copy">Copy</button><code>clang -g -O1 \
+  -fsanitize=address,undefined \
+  -fno-omit-frame-pointer \
+  your_test_sources.c -o chess_debug</code></pre>
+   <p>Prefer a CMake debug configuration for the real multi-file project. Use LLDB for stepping and stack traces; use Instruments when you need to profile the macOS application. Run release benchmarks separately from sanitizer builds.</p>
+   <h3>Release checklist</h3>
+   <ul class="checklist">
+    <li><label><input type="checkbox"> Clean build works from a fresh checkout</label></li>
+    <li><label><input type="checkbox"> All unit, perft and integration tests pass</label></li>
+    <li><label><input type="checkbox"> No known illegal-move or state-restoration bugs</label></li>
+    <li><label><input type="checkbox"> Search can be stopped and application closed safely</label></li>
+    <li><label><input type="checkbox"> Games can be saved, loaded and exported</label></li>
+    <li><label><input type="checkbox"> README, build instructions and architecture docs are complete</label></li>
+    <li><label><input type="checkbox"> macOS app bundle or distributable package tested</label></li>
+    <li><label><input type="checkbox"> Versioned GitHub release and demo prepared</label></li>
+   </ul>
+  </section>
+
+  <section id="roadmap">
+   <h2>15. Your 75-module curriculum</h2>
+   <p>Use this sequence as the project's learning and implementation roadmap. The module titles are the checkpoints; complete the explanation and tests in the relevant sections above before moving on.</p>
+   <details open><summary>Phase 01 — Project foundation and C architecture (M01–M05)</summary><ol><li>Project setup</li><li>C build system</li><li>C engine architecture</li><li>Memory and debugging</li><li>Testing infrastructure</li></ol></details>
+   <details><summary>Phase 02 — Chessboard representation (M06–M11)</summary><ol start="6"><li>Chess fundamentals</li><li>Array-based board</li><li>Bitboards</li><li>Board state</li><li>FEN parser</li><li>Board initialization</li></ol></details>
+   <details><summary>Phase 03 — Move generation and rules (M12–M22)</summary><ol start="12"><li>Move representation</li><li>Pawn movement</li><li>Knight movement</li><li>Sliding pieces</li><li>King movement</li><li>Attack detection</li><li>Pseudo-legal moves</li><li>Legal moves</li><li>Special moves</li><li>Make and unmake</li><li>Game termination</li></ol></details>
+   <details><summary>Phase 04 — Chess engine validation (M23–M26)</summary><ol start="23"><li>Perft testing</li><li>Perft debugging</li><li>Special-position testing</li><li>Regression testing</li></ol></details>
+   <details><summary>Phase 05 — Python graphical application (M27–M34)</summary><ol start="27"><li>Pygame foundation</li><li>Chessboard rendering</li><li>Chess piece rendering</li><li>Mouse interaction</li><li>Move visualization</li><li>Game interface</li><li>Game controls</li><li>UI design</li></ol></details>
+   <details><summary>Phase 06 — C/Python integration (M35–M40)</summary><ol start="35"><li>Shared library</li><li>ctypes integration</li><li>Board synchronization</li><li>UCI protocol</li><li>Engine communication</li><li>Integration testing</li></ol></details>
+   <details><summary>Phase 07 — First chess AI (M41–M47)</summary><ol start="41"><li>Game tree</li><li>Minimax</li><li>Negamax</li><li>Evaluation function</li><li>Alpha-beta pruning</li><li>Search depth</li><li>Iterative deepening</li></ol></details>
+   <details><summary>Phase 08 — Advanced evaluation and search (M48–M57)</summary><ol start="48"><li>Piece-square tables</li><li>Pawn structure</li><li>Mobility</li><li>King safety</li><li>Move ordering</li><li>Quiescence search</li><li>Killer and history heuristics</li><li>Transposition tables</li><li>Zobrist hashing</li><li>Principal variation search</li></ol></details>
+   <details><summary>Phase 09 — Board and engine optimization (M58–M60)</summary><ol start="58"><li>Bitboard move generation</li><li>Magic bitboards</li><li>Search optimization</li></ol></details>
+   <details><summary>Phase 10 — Application features (M61–M66)</summary><ol start="61"><li>Player vs Player and Player vs AI modes</li><li>Chess clock and time controls</li><li>PGN import/export and game replay</li><li>FEN editor and custom positions</li><li>Opening book integration</li><li>Settings, themes and sound</li></ol></details>
+   <details><summary>Phase 11 — Analysis and statistics (M67–M71)</summary><ol start="67"><li>UCI analysis and engine evaluation</li><li>Principal variation and alternative moves</li><li>Game statistics</li><li>Evaluation and performance graphs</li><li>Game review and move-quality analysis</li></ol></details>
+   <details><summary>Phase 12 — Release engineering (M72–M75)</summary><ol start="72"><li>Full integration and regression testing</li><li>Profiling and performance optimization</li><li>macOS packaging and distribution</li><li>Documentation, GitHub release and demonstration</li></ol></details>
+   <div class="callout success"><strong>Milestone gates:</strong> M1 foundation → M2 validated rules → M3 GUI → M4 integration → M5 first AI → M6 stronger engine → M7 feature-complete app → M8 analysis → M9 release.</div>
+  </section>
+
+  <section id="resources">
+   <h2>16. Free learning and reference resources</h2>
+   <p>Use documentation and reference implementations to understand standards and test correctness. Do not copy another engine and present it as your own.</p>
+   <ul>
+    <li><a href="https://www.chessprogramming.org/" target="_blank" rel="noopener">Chess Programming Wiki</a> — board representations, move generation, evaluation and search.</li>
+    <li><a href="https://www.pygame.org/docs/" target="_blank" rel="noopener">Pygame documentation</a> — events, surfaces, drawing, fonts and timing.</li>
+    <li><a href="https://cmake.org/documentation/" target="_blank" rel="noopener">CMake documentation</a> — targets, libraries and build configurations.</li>
+    <li><a href="https://www.python.org/doc/" target="_blank" rel="noopener">Python documentation</a> — language and standard library.</li>
+    <li><a href="https://python-chess.readthedocs.io/" target="_blank" rel="noopener">python-chess documentation</a> — optional reference for chess rules, PGN/FEN and test comparisons.</li>
+    <li><a href="https://github.com/official-stockfish/Stockfish" target="_blank" rel="noopener">Stockfish source</a> — optional advanced benchmark/reference; not your engine implementation.</li>
+    <li><a href="https://www.shredderchess.com/chess-info/features/uci-universal-chess-interface.html" target="_blank" rel="noopener">UCI protocol overview</a> — engine communication protocol.</li>
+    <li><a href="https://clang.llvm.org/docs/AddressSanitizer.html" target="_blank" rel="noopener">AddressSanitizer documentation</a> — memory error detection.</li>
+   </ul>
+  </section>
+
+  <section>
+   <h2>Your first development sprint</h2>
+   <p>Do not try to build all 75 modules at once. Your first sprint is deliberately small: make a reliable C project that builds, tests and can be debugged.</p>
+   <ul class="checklist">
+    <li><label><input type="checkbox"> Create the Git repository and initial directory structure.</label></li>
+    <li><label><input type="checkbox"> Install and verify Clang, CMake and Python.</label></li>
+    <li><label><input type="checkbox"> Build and run the minimal CMake executable.</label></li>
+    <li><label><input type="checkbox"> Add the first CTest test and make it pass.</label></li>
+    <li><label><input type="checkbox"> Add README instructions and commit the foundation.</label></li>
+   </ul>
+   <div class="callout success"><strong>Definition of done:</strong> A fresh clone can be configured, compiled and tested using documented commands. Then move to board representation and FEN.</div>
+  </section>
+ </main>
+</div>
+<footer>Build incrementally. Verify every rule. Measure every optimization. Make the engine yours.</footer>
+<script>
+(function(){
+ const boxes=[...document.querySelectorAll('input[type="checkbox"]')];
+ const bar=document.getElementById('bar'),count=document.getElementById('count');
+ function update(){const done=boxes.filter(x=>x.checked).length;count.textContent=done+' / '+boxes.length;bar.style.width=(done/boxes.length*100)+'%'}
+ boxes.forEach(b=>b.addEventListener('change',update));update();
+ document.querySelectorAll('.copy').forEach(btn=>btn.addEventListener('click',async()=>{
+   const text=btn.parentElement.querySelector('code').innerText;
+   try{await navigator.clipboard.writeText(text);btn.textContent='Copied';}
+   catch(e){btn.textContent='Select & copy';}
+   setTimeout(()=>btn.textContent='Copy',1400);
+ }));
+})();
+</script>
+</body>
+</html>

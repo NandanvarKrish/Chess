@@ -1,0 +1,40 @@
+# Build artifacts
+build/
+*.o
+*.so
+*.dylib
+*.a
+*.exe
+*.pyc
+__pycache__/
+
+# IDE settings
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Testing
+.cdash/
+coverage.html
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+
+# Python (when using venv outside project)
+*.whl
+
+# Data and cache
+*.sqlite3
+*.db
+*.cache
+
+# Documentation build
+docs/_build/
